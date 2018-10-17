@@ -1,0 +1,26 @@
+atomicwrites==1.2.1
+attrs==18.2.0
+certifi==2018.10.15
+chardet==3.0.4
+colorama==0.4.0
+et-xmlfile==1.0.1
+-e git+https://github.com/OpenDataServices/flatten-tool.git@bb485e6390ba5bed527546f8493a7a0b727fb354#egg=flattentool
+idna==2.7
+jdcal==1.4
+jsonref==0.2
+jsonschema==2.6.0
+lxml==4.2.5
+more-itertools==4.3.0
+numpy==1.15.2
+openpyxl==2.5.8
+pluggy==0.8.0
+py==1.7.0
+pytest==3.8.2
+python-dateutil==2.7.3
+pytz==2018.5
+requests==2.19.1
+requests-mock==1.5.2
+schema==0.6.8
+six==1.11.0
+urllib3==1.23
+xmltodict==0.11.0

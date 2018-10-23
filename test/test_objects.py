@@ -58,6 +58,11 @@ def test_excel(get_file, m):
         get_file("sample_data/ExampleTrust-grants-fixed.xlsx"))
     assert g.is_valid()
 
+    # test alias
+    g = ThreeSixtyGiving.from_xlsx(
+        get_file("sample_data/ExampleTrust-grants-fixed.xlsx"))
+    assert g.is_valid()
+
     with pytest.raises(ValueError):
         g = ThreeSixtyGiving.from_excel(
             get_file("sample_data/ExampleTrust-grants-broken.xlsx"))
@@ -145,6 +150,12 @@ def test_excel_output(get_file, m):
     g.to_excel(t)
 
     h = ThreeSixtyGiving.from_excel(t)
+    assert h.is_valid()
+
+    # test alias
+    g.to_xlsx(t)
+
+    h = ThreeSixtyGiving.from_xlsx(t)
     assert h.is_valid()
 
 

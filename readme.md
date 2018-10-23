@@ -80,6 +80,8 @@ If you want a different schema then pass `schema_url=https://url/to/schema.json`
 ```python
 g = ThreeSixtyGiving.from_excel("grants/ExampleTrust-grants.xlsx")
 # or:
+g = ThreeSixtyGiving.from_xlsx("grants/ExampleTrust-grants.xlsx")
+# or:
 g = ThreeSixtyGiving.from_file("grants/ExampleTrust-grants.xlsx", "xlsx")
 ```
 
@@ -128,7 +130,7 @@ g = ThreeSixtyGiving.from_url("http://example.org/opendata/ExampleTrust-grants",
 
 Before the data is checked you'll need to ensure the data schema has been
 fetched. This is done already if using `from_csv()`, `from_json()`, 
-`from_excel()` or `from_url()` but needs to be done manually if just
+`from_excel()`, `from_xlsx()` or `from_url()` but needs to be done manually if just
 creating the class directly with data:
 
 ```python
@@ -151,7 +153,7 @@ g = ThreeSixtyGiving.from_json(
     "grants/ExampleTrust-grants.json",
     schema_url='http://example.org/360-giving-schema.json'
 )
-# also works with `from_csv()`, `from_excel()`, `from_url()`
+# also works with `from_csv()`, `from_excel()`, `from_xlsx()`, `from_url()`
 ```
 
 You can also pass a Schema object to the `schema` parameter, in
@@ -182,7 +184,7 @@ g = ThreeSixtyGiving.from_json(
     "grants/ExampleTrust-grants.json",
     schema=new_schema
 )
-# also works with `from_csv()`, `from_excel()`, `from_url()`
+# also works with `from_csv()`, `from_excel()`, `from_xlsx()`,`from_url()`
 ```
 
 The `schema` and `schema_url` parameters can also be passed to `fetch_schema()`
@@ -239,9 +241,10 @@ g = ThreeSixtyGiving(grants)
 g.to_json("grants.json")
 g.to_csv("grants.csv")
 g.to_excel("grants.xlsx")
+g.to_xlsx("grants.xlsx")
 ```
 
-The `to_csv()` and `to_excel()` methods can be passed the `convert_fieldnames`
+The `to_csv()`, `to_excel()` and `to_xlsx()` methods can be passed the `convert_fieldnames`
 parameter. If `convert_fieldnames` is True (which is the default) then
 the returned files will have nicer looking fieldnames based on the title
 for each field. So...
@@ -249,7 +252,7 @@ for each field. So...
 - `amountAwarded` becomes `Amount Awarded`
 - `recipientOrganization.0.name` becomes `Recipient Org:0:Name`
 
-Note that currently the `to_excel()` method returns an excel workbook with one
+Note that currently the `to_excel()` and `to_xlsx()` methods returns an excel workbook with one
 sheet in the flat file format, rather than a series of tabs like the `unflatten`
 method in `flattentool`.
 

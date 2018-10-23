@@ -183,6 +183,8 @@ class ThreeSixtyGiving:
         os.remove(json_output)
         return c
 
+    from_xlsx = from_excel  # alias for to_excel
+
     @classmethod
     def from_json(cls, f, validate=True, **kwargs):
         """
@@ -429,6 +431,8 @@ class ThreeSixtyGiving:
             for row, r in enumerate(data):
                 worksheet.write_row(row+1, 0, [r.get(f) for f in fieldnames])
             workbook.close()
+
+    to_xlsx = to_excel # alias for to_excel
 
     def to_pandas(self, convert_fieldnames=True):
         """

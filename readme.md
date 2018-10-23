@@ -71,6 +71,10 @@ with open("grants/ExampleTrust-grants.json") as f:
     g = ThreeSixtyGiving.from_json(f)
 ```
 
+By default this method will check whether the file is valid against the
+default schema. If you don't want to do this pass `validate=False`. 
+If you want a different schema then pass `schema_url=https://url/to/schema.json`.
+
 #### Import from an Excel file
 
 ```python
@@ -79,6 +83,10 @@ g = ThreeSixtyGiving.from_excel("grants/ExampleTrust-grants.xlsx")
 g = ThreeSixtyGiving.from_file("grants/ExampleTrust-grants.xlsx", "xlsx")
 ```
 
+By default this method will check whether the file is valid against the
+default schema. If you don't want to do this pass `validate=False`. 
+If you want a different schema then pass `schema_url=https://url/to/schema.json`.
+
 #### Import from a CSV file
 
 ```python
@@ -86,6 +94,10 @@ g = ThreeSixtyGiving.from_csv("grants/ExampleTrust-grants.csv")
 # or:
 g = ThreeSixtyGiving.from_file("grants/ExampleTrust-grants.csv", "csv")
 ```
+
+By default this method will check whether the file is valid against the
+default schema. If you don't want to do this pass `validate=False`. 
+If you want a different schema then pass `schema_url=https://url/to/schema.json`.
 
 For a CSV file you can specify the encoding if needed, eg:
 
@@ -100,6 +112,10 @@ Otherwise it will attempt to guess the encoding.
 ```python
 g = ThreeSixtyGiving.from_url("http://example.org/opendata/ExampleTrust-grants.csv")
 ```
+
+By default this method will check whether the file is valid against the
+default schema. If you don't want to do this pass `validate=False`. 
+If you want a different schema then pass `schema_url=https://url/to/schema.json`.
 
 It will attempt to guess the filetype from the response, filetype can 
 be manually specified by using the `filetype` attribute, e.g.:

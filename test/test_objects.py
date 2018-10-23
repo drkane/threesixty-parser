@@ -46,6 +46,10 @@ def test_csv(get_file, m):
         g = ThreeSixtyGiving.from_csv(
             get_file("sample_data/ExampleTrust-grants-broken.csv"))
 
+    # doesn't raise an error if validation not enabled
+    g = ThreeSixtyGiving.from_csv(
+        get_file("sample_data/ExampleTrust-grants-broken.csv"), validate=False)
+
 
 def test_excel(get_file, m):
     g = ThreeSixtyGiving.from_excel(
@@ -55,6 +59,10 @@ def test_excel(get_file, m):
     with pytest.raises(ValueError):
         g = ThreeSixtyGiving.from_excel(
             get_file("sample_data/ExampleTrust-grants-broken.xlsx"))
+
+    # doesn't raise an error if validation not enabled
+    g = ThreeSixtyGiving.from_excel(
+        get_file("sample_data/ExampleTrust-grants-broken.xlsx"), validate=False)
 
 
 def test_url(get_file, m):

@@ -174,11 +174,12 @@ class ThreeSixtyGiving:
         return c
 
     @classmethod
-    def from_json(cls, f, **kwargs):
+    def from_json(cls, f, validate=True, **kwargs):
         """
         Opens a json format 360Giving file, and return an object for accessing the data
 
         :param str f: file path to an json file or a file-like object with a `read()` method
+        :param bool validate: Whether to validate the file after the data is loaded
         :return: Object of this class with data loaded
         
         Additional keyword arguments are passed to `cls.__init__()` to produce the data
@@ -192,8 +193,10 @@ class ThreeSixtyGiving:
         c = cls(json.load(fileobj), **kwargs)
         if opened_file:
             fileobj.close()
-        c.fetch_schema()
-        # @TODO: run validator here? raise exception if not valid file?
+        if validate:
+            c.fetch_schema()
+            if not c.is_valid():
+                raise ValueError("Invalid file") # @TODO: better error messages here
         return c
 
     @classmethod

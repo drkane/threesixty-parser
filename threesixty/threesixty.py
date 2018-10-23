@@ -191,7 +191,7 @@ class ThreeSixtyGiving:
         :param str f: file path to an json file or a file-like object with a `read()` method
         :param bool validate: Whether to validate the file after the data is loaded
         :return: Object of this class with data loaded
-        
+
         Additional keyword arguments are passed to `cls.__init__()` to produce the data
         """
         opened_file = False
@@ -210,7 +210,7 @@ class ThreeSixtyGiving:
         return c
 
     @classmethod
-    def guess_encoding(cls, f, encodings=ENCODINGS_TO_CHECK):
+    def guess_encoding(cls, f, encodings=None):
         """
         Given a file will try to work out the encoding, based on running through
         a list of encodings and seeing whether any UnicodeDecodeErrors occur.
@@ -222,6 +222,9 @@ class ThreeSixtyGiving:
 
         @TODO: Could be more efficient by just opening the first part of the file
         """
+        if encodings is None:
+            encodings = ENCODINGS_TO_CHECK
+
         for e in encodings:
             try:
                 with open(f, encoding=e) as encoding_file:
@@ -252,7 +255,7 @@ class ThreeSixtyGiving:
         :param dict schema: dictionary containing a JSON schema
         :return: The full schema
         """
-        
+
         # if no schema_url given then use the default one
         if schema_url is None:
             schema_url = self.schema_url

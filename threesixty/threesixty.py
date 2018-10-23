@@ -24,15 +24,18 @@ class ThreeSixtyGiving:
     schema_url = 'https://raw.githubusercontent.com/ThreeSixtyGiving/standard/master/schema/360-giving-package-schema.json'
     user_agent = '360Giving data'
 
-    def __init__(self, schema_url=None):
+    def __init__(self, data=None, schema_url=None):
         self.schema = None
         if schema_url:
             self.schema_url = schema_url
         self.validator = None
         self.errors = []
-        self.valid = False
+        self.valid = None
         self.replace_names = OrderedDict()
-        self.data = {}
+        if data:
+            self.data = data
+        else:
+            self.data = {}
 
     def __iter__(self):
         """
@@ -171,28 +174,26 @@ class ThreeSixtyGiving:
         return c
 
     @classmethod
-    def from_json(cls, f, schema_url=None):
+    def from_json(cls, f, **kwargs):
         """
         Opens a json format 360Giving file, and return an object for accessing the data
 
         :param str f: file path to an json file or a file-like object with a `read()` method
-        :param str schema_url: link to the schema for these files
         :return: Object of this class with data loaded
+        
+        Additional keyword arguments are passed to `cls.__init__()` to produce the data
         """
-        c = cls(schema_url=schema_url)
+        opened_file = False
         if isinstance(f, str):
             fileobj = open(f)
+            opened_file = True
         else:
             fileobj = f
-        c.data = json.load(fileobj)
-        fileobj.close()
+        c = cls(json.load(fileobj), **kwargs)
+        if opened_file:
+            fileobj.close()
         c.fetch_schema()
-        c.errors = list(c.get_errors(c.data))
-
-        if c.errors:
-            # @TODO: replace with custom error class
-            raise ValueError("Invalid file")
-        c.valid = len(c.errors) == 0
+        # @TODO: run validator here? raise exception if not valid file?
         return c
 
     @classmethod
@@ -265,7 +266,7 @@ class ThreeSixtyGiving:
         return self.schema
 
 
-    def get_errors(self, data):
+    def get_errors(self, data=None):
         """
         Using the schema and validator created by `fetch_schema`, validate
         a dataset and yield any errors that result
@@ -273,6 +274,13 @@ class ThreeSixtyGiving:
         :param dict data: Data to check for errors
         :return: Iterator of any errors found in the data
         """
+        # if no schema given then we can't error check
+        if self.schema is None or self.validator is None:
+            raise ValueError("No schema available to check")
+
+        if data is None:
+            data = self.data
+
         for e in self.validator.iter_errors(data):
             # ignore error where the datetime value is one of a type
             if e.validator == 'oneOf' and e.validator_value[0] == {'format': 'date-time'}:
@@ -283,15 +291,13 @@ class ThreeSixtyGiving:
         """
         Check whether the current object has a valid file against the schema
 
-        :return: True|False whether the file is valid or not
-        :rtype: bool
+        :return: True|False whether the file is valid or not. Returns None if validity hasn't been checked (eg not data)
+        :rtype: bool or None
         """
-        if not self.valid:
-            for e in self.errors:
-                # print(e.with_traceback())
-                # print(e.validator, e.validator_value)
-                # print(dir(e))
-                print(e.message)
+        if self.valid is None and self.data:
+            self.errors = list(self.get_errors(self.data))
+            self.valid = len(self.errors) == 0
+
         return self.valid
 
     def to_json(self, f):
@@ -393,7 +399,7 @@ class ThreeSixtyGiving:
 
         :param bool convert_fieldnames: Whether to convert fieldnames into a more friendly format or not (uses the dictionary created in `self.fetch_schema()`)
         :return: Pandas dataframe
-        :raises: Error if pandas is not installed
+        :raises: ImportError if pandas is not installed
         """
         import pandas
         data, fieldnames = self.to_flatfile()

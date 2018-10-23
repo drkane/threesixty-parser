@@ -1,3 +1,3 @@
 [submodule "test/sample_data"]
 	path = test/sample_data
-	url = https://github.com/ThreeSixtyGiving/sample-data.git
+	url = https://github.com/drkane/sample-data.git

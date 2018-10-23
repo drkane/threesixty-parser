@@ -419,6 +419,9 @@ class ThreeSixtyGiving:
 
 
 class Grant:
+    """
+    A class to hold details about a particular grant in the 360Giving standard
+    """
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -427,6 +430,11 @@ class Grant:
         return '<Grant {}>'.format(self.id)
 
     def to_flat(self):
+        """
+        Turn the nested grant object into a flat dictionary of key:values
+
+        Nested fields are turned into the form `key.0.subkey`
+        """
         def flatten(vals, prefix=''):
             new_vals = []
             if isinstance(vals, list):

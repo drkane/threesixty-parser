@@ -137,7 +137,8 @@ g.fetch_schema()
 ```
 
 If you want to use a schema that is different from the default (<https://raw.githubusercontent.com/ThreeSixtyGiving/standard/master/schema/360-giving-package-schema.json>)
-this needs to be specified using the `schema_url` parameter:
+this needs to be specified using the `schema_url` parameter, which
+is an URL pointing to a JSON schema file:
 
 ```python
 g = ThreeSixtyGiving(
@@ -150,24 +151,41 @@ g = ThreeSixtyGiving.from_json(
     "grants/ExampleTrust-grants.json",
     schema_url='http://example.org/360-giving-schema.json'
 )
-# or
-g = ThreeSixtyGiving.from_csv(
-    "grants/ExampleTrust-grants.csv",
-    schema_url='http://example.org/360-giving-schema.json'
-)
-# or
-g = ThreeSixtyGiving.from_excel(
-    "grants/ExampleTrust-grants.xlsx",
-    schema_url='http://example.org/360-giving-schema.json'
-)
-# or
-g = ThreeSixtyGiving.from_url(
-    "http://example.org/opendata/ExampleTrust-grants.csv",
-    schema_url='http://example.org/360-giving-schema.json'
-)
+# also works with `from_csv()`, `from_excel()`, `from_url()`
 ```
 
-Currently the schema must be a URL pointing to a JSON file.
+You can also pass a Schema object to the `schema` parameter, in
+the same way:
+
+
+```python
+new_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "New Schema for a 360Giving Data Grant Package",
+    "type": "object",
+    "required": ["grants"],
+    "properties": {
+        "grants": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "https://raw.githubusercontent.com/ThreeSixtyGiving/standard/master/schema/360-giving-schema.json" },
+            "uniqueItems": true
+        }
+    }
+}
+g = ThreeSixtyGiving(
+    grants,
+    schema=new_schema
+)
+# or
+g = ThreeSixtyGiving.from_json(
+    "grants/ExampleTrust-grants.json",
+    schema=new_schema
+)
+# also works with `from_csv()`, `from_excel()`, `from_url()`
+```
+
+The `schema` and `schema_url` parameters can also be passed to `fetch_schema()`
 
 #### Check for errors
 

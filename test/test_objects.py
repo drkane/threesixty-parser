@@ -50,6 +50,8 @@ def test_csv(get_file, m):
     g = ThreeSixtyGiving.from_csv(
         get_file("sample_data/ExampleTrust-grants-broken.csv"), validate=False)
 
+    # test different encodings
+
 
 def test_excel(get_file, m):
     g = ThreeSixtyGiving.from_excel(
@@ -166,3 +168,7 @@ def test_csv_output(get_file, m):
 
     h = ThreeSixtyGiving.from_csv(t)
     assert h.is_valid()
+
+
+# @TODO: Test various schema combinations
+# @TODO: test encoding guesser

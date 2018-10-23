@@ -24,14 +24,22 @@ class ThreeSixtyGiving:
     schema_url = 'https://raw.githubusercontent.com/ThreeSixtyGiving/standard/master/schema/360-giving-package-schema.json'
     user_agent = '360Giving data'
 
-    def __init__(self, data=None, schema_url=None):
+    def __init__(self, data=None, schema_url=None, schema=None):
         self.schema = None
+        self.validator = None
+        self.replace_names = OrderedDict()
+
         if schema_url:
             self.schema_url = schema_url
-        self.validator = None
+            # @TODO: should this actually fetch the schema at this point?
+            # eg:
+            # if schema or schema_url:
+            #   self.fetch_schema(schema=schema, schema_url=schema_url)
+        if schema:
+            self.fetch_schema(schema=schema)
+
         self.errors = []
         self.valid = None
-        self.replace_names = OrderedDict()
         if data:
             self.data = data
         else:
@@ -130,9 +138,11 @@ class ThreeSixtyGiving:
             input_format="csv",
             root_list_path=cls.root_id,
             root_id='',
+            # @TODO: Need to better handle the schema here - there's duplication with the flattentool also fetching it
             schema='https://raw.githubusercontent.com/ThreeSixtyGiving/standard/master/schema/360-giving-schema.json',
             convert_titles=True,
             encoding=encoding,
+            # I don't think this is used properly here
             metatab_schema=cls.schema_url,
             metatab_name='Meta',
             metatab_vertical_orientation=True,
@@ -142,12 +152,11 @@ class ThreeSixtyGiving:
         return c
 
     @classmethod
-    def from_excel(cls, f, encoding='utf8', **kwargs):
+    def from_excel(cls, f, **kwargs):
         """
         Opens an Excel format 360Giving file, and return an object for accessing the data
 
         :param str f: file path to an Excel file
-        :param str encoding: will be passed to open(), will be guessed if not given
         :return: Object of this class with data loaded
 
         Additional keyword arguments are passed to `cls.to_json()` which is used to parse the converted file
@@ -162,10 +171,11 @@ class ThreeSixtyGiving:
             input_format="xlsx",
             root_list_path=cls.root_id,
             root_id='',
+            # @TODO: Need to better handle the schema here - there's duplication with the flattentool also fetching it
             schema='https://raw.githubusercontent.com/ThreeSixtyGiving/standard/master/schema/360-giving-schema.json',
             convert_titles=True,
-            encoding=encoding,
-            metatab_schema='https://raw.githubusercontent.com/ThreeSixtyGiving/standard/master/schema/360-giving-package-schema.json',
+            # I don't think this is used properly here
+            metatab_schema=cls.schema_url,
             metatab_name='Meta',
             metatab_vertical_orientation=True,
         )
@@ -222,7 +232,7 @@ class ThreeSixtyGiving:
                 return e
         return None
 
-    def fetch_schema(self):
+    def fetch_schema(self, schema_url=None, schema=None):
         """
         Fetch a schema based on the value in self.schema_url.
 
@@ -231,11 +241,32 @@ class ThreeSixtyGiving:
          - use `jsonschema` to create a validator that can be used to check documents against the schema
          - create a dictionary of field name conversions (as regex) that can be used to replace field names with more user friendly ones
 
-        :return: The full schema
+        The order of preference for loading a schema is:
 
-        @TODO: caching of the schema so it's not fetched everytime (or possibly )
+        1. A schema object given as a parameter to this method
+        2. A schema object already provided to this object
+        3. A schema fetched from schema_url provided to this method
+        4. A schema fetched from the schema_url provided to this object
+
+        :param str schema_url: URL of a JSON schema
+        :param dict schema: dictionary containing a JSON schema
+        :return: The full schema
         """
-        self.schema = requests.get(self.schema_url).json()
+        
+        # if no schema_url given then use the default one
+        if schema_url is None:
+            schema_url = self.schema_url
+
+        # if no schema is given or present already then load from URL
+        if self.schema is None and schema is None:
+            self.schema = requests.get(schema_url).json()
+
+        # else if a schema has been given then use that one
+        elif schema is not None:
+            self.schema = schema
+
+        if self.schema is None:
+            raise ValueError("No schema found")
 
         # fetch the whole schema including references
         self.schema = JsonRef.replace_refs(self.schema)

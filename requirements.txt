@@ -4,7 +4,7 @@ certifi==2018.10.15
 chardet==3.0.4
 colorama==0.4.0
 et-xmlfile==1.0.1
--e git+https://github.com/OpenDataServices/flatten-tool.git@bb485e6390ba5bed527546f8493a7a0b727fb354#egg=flattentool
+flattentool==0.5.0
 idna==2.7
 jdcal==1.4
 jsonref==0.2

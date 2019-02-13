@@ -12,8 +12,6 @@ setup(
         "requests==2.19.1",
         "jsonref==0.2",
         "jsonschema==2.6.0",
-    ],
-    dependency_links=[
-        'http://github.com/OpenDataServices/flatten-tool/tarball/master#egg=flattentool'
+        "flattentool==0.5.0",
     ]
 )

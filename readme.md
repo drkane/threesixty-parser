@@ -19,7 +19,10 @@ You'll need to ensure the requirements from `requirements.txt`
 are installed first (`pip install -r requirements.txt`).
 
 If you want to use the `to_pandas()` method you'll also need to install
-[pandas](https://pandas.pydata.org/).
+[pandas](https://pandas.pydata.org/), and if you want the `to_excel()`
+method you need to install [xlsxwriter](https://xlsxwriter.readthedocs.io/).
+To install these optional requirements you can use `pip install -r requirements-full.txt`
+instead.
 
 ### As a class
 
@@ -255,6 +258,9 @@ for each field. So...
 Note that currently the `to_excel()` and `to_xlsx()` methods returns an excel workbook with one
 sheet in the flat file format, rather than a series of tabs like the `unflatten`
 method in `flattentool`.
+
+The `to_excel()` and `to_xlsx()` methodd will only work if the `xlsxwriter` library is installed, which
+isn't part of `requirements.txt` so will need to be installed separately.
 
 #### Get flat grants
 

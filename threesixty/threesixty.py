@@ -134,7 +134,9 @@ class ThreeSixtyGiving:
         destination = os.path.join(tmp_dir, 'grants.csv')
         with open(destination, 'wb') as dest_write:
             dest_write.write(fileobj.read())
-        encoding = cls.guess_encoding(destination) if not encoding else encoding
+        if not encoding:
+            destfileobj, encoding = cls.guess_encoding(destination)
+            destfileobj.close()
 
         json_file, json_output = tempfile.mkstemp(suffix='.json')
         os.close(json_file)
@@ -204,7 +206,7 @@ class ThreeSixtyGiving:
         """
         opened_file = False
         if isinstance(f, str):
-            fileobj = open(f)
+            fileobj, encoding = cls.guess_encoding(f)
             opened_file = True
         else:
             fileobj = f
@@ -235,12 +237,10 @@ class ThreeSixtyGiving:
 
         for e in encodings:
             try:
-                with open(f, encoding=e) as encoding_file:
-                    encoding_file.read()
+                encoding_file = open(f, encoding=e)
+                return encoding_file, e
             except UnicodeDecodeError:
                 continue
-            else:
-                return e
         return None
 
     def fetch_schema(self, schema_url=None, schema=None):

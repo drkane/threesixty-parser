@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name="threesixtygiving",
     packages=["threesixty"],
-    version="0.0.4",
+    version="0.0.5",
     author="David Kane david@dkane.net",
     include_package_data=True,
     license="MIT",

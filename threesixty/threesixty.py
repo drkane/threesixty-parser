@@ -1,7 +1,6 @@
 import json
 import tempfile
 import os
-import shutil
 import csv
 import re
 from collections import OrderedDict
@@ -125,9 +124,16 @@ class ThreeSixtyGiving:
 
         # `flattentool.unflatten` is designed to accept a directory of CSV files
         # so need to create a dummy directory
+        opened_file = False
+        if isinstance(f, str):
+            fileobj = open(f, 'rb')
+            opened_file = True
+        else:
+            fileobj = f
         tmp_dir = tempfile.mkdtemp()
         destination = os.path.join(tmp_dir, 'grants.csv')
-        shutil.copy(f, destination)
+        with open(destination, 'wb') as dest_write:
+            dest_write.write(fileobj.read())
         encoding = cls.guess_encoding(destination) if not encoding else encoding
 
         json_file, json_output = tempfile.mkstemp(suffix='.json')

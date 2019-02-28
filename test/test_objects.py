@@ -63,7 +63,12 @@ def test_excel(get_file, m):
         get_file("sample_data/ExampleTrust-grants-fixed.xlsx"))
     assert g.is_valid()
 
-    with pytest.raises(ValueError):
+    # test merged cells
+    g = ThreeSixtyGiving.from_xlsx(
+        get_file("sample_data/ExampleTrust-grants-merged-cell.xlsx"))
+    assert g.is_valid()
+    g.to_pandas()
+    
         g = ThreeSixtyGiving.from_excel(
             get_file("sample_data/ExampleTrust-grants-broken.xlsx"))
 
@@ -75,6 +80,7 @@ def test_excel(get_file, m):
 def test_url(get_file, m):
     test_files = [
         "sample_data/ExampleTrust-grants-fixed.xlsx",
+        "sample_data/ExampleTrust-grants-merged-cell.xlsx",
         "sample_data/ExampleTrust-grants-broken.xlsx",
         "sample_data/ExampleTrust-grants-fixed.csv",
         "sample_data/ExampleTrust-grants-broken.csv",
@@ -122,6 +128,28 @@ def test_output(get_file, m):
 def test_pandas_output(get_file, m):
     g = ThreeSixtyGiving.from_file(
         get_file("sample_data/ExampleTrust-grants-fixed.xlsx"), "xlsx")
+    df = g.to_pandas()
+
+    assert isinstance(g.to_pandas(), pandas.DataFrame)
+    assert df.columns.all(['Identifier', 'Title', 'Description', 'Currency', 'Amount Awarded',
+                           'Award Date', 'Recipient Org:0:Identifier', 'Recipient Org:0:Name',
+                           'Beneficiary Location:0:Name', 'Beneficiary Location:0:Country Code',
+                           'Beneficiary Location:0:Geographic Code',
+                           'Beneficiary Location:0:Geographic Code Type',
+                           'Funding Org:0:Identifier', 'Funding Org:0:Name', 'Last Modified',
+                           'Data Source'])
+
+    df = g.to_pandas(convert_fieldnames=False)
+    assert df.columns.all(['id', 'title', 'description', 'currency', 'amountAwarded', 'awardDate',
+                           'recipientOrganization.0.id', 'recipientOrganization.0.name',
+                           'beneficiaryLocation.0.name', 'beneficiaryLocation.0.countryCode',
+                           'beneficiaryLocation.0.geoCode', 'beneficiaryLocation.0.geoCodeType',
+                           'fundingOrganization.0.id', 'fundingOrganization.0.name',
+                           'dateModified', 'dataSource'])
+
+def test_pandas_output_merged_cells(get_file, m):
+    g = ThreeSixtyGiving.from_file(
+        get_file("sample_data/ExampleTrust-grants-merged-cell.xlsx"), "xlsx")
     df = g.to_pandas()
 
     assert isinstance(g.to_pandas(), pandas.DataFrame)

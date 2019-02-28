@@ -1,1 +1,1 @@
-from .threesixty import ThreeSixtyGiving, Grant
+from .threesixty import ThreeSixtyGiving, Grant, ParseError

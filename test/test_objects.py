@@ -5,7 +5,7 @@ import pytest
 import requests_mock
 import pandas
 
-from threesixty import ThreeSixtyGiving, Grant
+from threesixty import ThreeSixtyGiving, Grant, ParseError
 
 @pytest.fixture
 def get_file():
@@ -42,7 +42,7 @@ def test_csv(get_file, m):
         get_file("sample_data/ExampleTrust-grants-fixed.csv"))
     assert g.is_valid()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ParseError):
         g = ThreeSixtyGiving.from_csv(
             get_file("sample_data/ExampleTrust-grants-broken.csv"))
 
@@ -69,6 +69,7 @@ def test_excel(get_file, m):
     assert g.is_valid()
     g.to_pandas()
     
+    with pytest.raises(ParseError):
         g = ThreeSixtyGiving.from_excel(
             get_file("sample_data/ExampleTrust-grants-broken.xlsx"))
 
@@ -93,7 +94,7 @@ def test_url(get_file, m):
             m.register_uri('GET', url, content=contents)
 
             if "broken" in f:
-                with pytest.raises(ValueError):
+                with pytest.raises(ParseError):
                     g = ThreeSixtyGiving.from_url(url)
             else:
                 g = ThreeSixtyGiving.from_url(url)

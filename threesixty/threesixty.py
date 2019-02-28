@@ -17,6 +17,11 @@ CONTENT_TYPE_MAP = {
     'text/csv': 'csv'
 }
 
+class ParseError(Exception):
+    def __init__(self, message, errors):
+        super().__init__(message)
+        self.errors = errors
+
 class ThreeSixtyGiving:
 
     root_id = 'grants'
@@ -216,7 +221,7 @@ class ThreeSixtyGiving:
         if validate:
             c.fetch_schema()
             if not c.is_valid():
-                raise ValueError("Invalid file") # @TODO: better error messages here
+                raise ParseError("Invalid file", c.errors)
         return c
 
     @classmethod

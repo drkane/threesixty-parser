@@ -7,6 +7,14 @@ foundations.
 The module particular relies on the [`flattentool`](https://github.com/OpenDataServices/flatten-tool) module, which
 it uses to parse Excel and CSV files.
 
+## Install
+
+This hasn't yet been published as a python package. You can install through pip using the following:
+
+```
+pip install -e git+https://github.com/drkane/threesixty-parser.git#egg=threesixtygiving
+```
+
 ## Usage
 
 To import the module use something like:

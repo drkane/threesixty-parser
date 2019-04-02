@@ -243,6 +243,8 @@ class ThreeSixtyGiving:
         for e in encodings:
             try:
                 encoding_file = open(f, encoding=e)
+                encoding_file.read()
+                encoding_file.seek(0)
                 return encoding_file, e
             except UnicodeDecodeError:
                 continue

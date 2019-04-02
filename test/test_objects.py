@@ -211,4 +211,10 @@ def test_csv_output(get_file, m):
 
 
 # @TODO: Test various schema combinations
-# @TODO: test encoding guesser
+def test_encodings(get_file):
+    f = get_file(os.path.join('sample_encodings', 'cp1252.txt'))
+    encoding = ThreeSixtyGiving.guess_encoding(f)
+    assert encoding[1] == 'latin_1'
+    f = get_file(os.path.join('sample_encodings', 'utf8.txt'))
+    encoding = ThreeSixtyGiving.guess_encoding(f)
+    assert encoding[1] == 'utf-8-sig'

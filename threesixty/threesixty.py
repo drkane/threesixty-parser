@@ -10,7 +10,7 @@ import requests
 from jsonref import JsonRef
 from jsonschema import Draft4Validator, FormatChecker
 
-ENCODINGS_TO_CHECK = ['utf-8-sig', 'cp1252', 'latin_1']
+ENCODINGS_TO_CHECK = ['utf-8-sig', 'cp1252', 'latin_1', 'ansi']
 CONTENT_TYPE_MAP = {
     'application/json': 'json',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',

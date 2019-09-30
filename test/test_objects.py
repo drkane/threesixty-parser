@@ -195,7 +195,7 @@ def test_json_output(get_file, m):
         get_file("sample_data/ExampleTrust-grants-fixed.xlsx"), "xlsx")
     g.to_json(t)
 
-    h = ThreeSixtyGiving.from_json(t)
+    h = ThreeSixtyGiving.from_json(t, validate=False)
     assert h.is_valid()
 
 

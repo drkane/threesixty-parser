@@ -5,7 +5,8 @@ import csv
 import re
 from collections import OrderedDict
 
-import flattentool
+from .unflatten import unflatten
+
 import requests
 from jsonref import JsonRef
 from jsonschema import Draft4Validator, FormatChecker
@@ -22,6 +23,75 @@ class ParseError(Exception):
         super().__init__(message)
         self.errors = errors
 
+
+class Schema:
+
+    def __init__(self, schema_url=None, root_id=None):
+        self.schema = None
+        self.root_id = root_id
+        self.validator = None
+        self.replace_names = OrderedDict()
+        if schema_url:
+            self.schema_url = schema_url
+            self.fetch()
+
+    def fetch(self, schema_url=None):
+        """
+        Fetch a schema based on the value in self.schema_url.
+
+        As well as fetching the initial schema file, the function will also:
+         - replace any references in the schema with the actual definitions (using JsonRef)
+         - use `jsonschema` to create a validator that can be used to check documents against the schema
+         - create a dictionary of field name conversions (as regex) that can be used to replace field names with more user friendly ones
+
+        The order of preference for loading a schema is:
+
+        1. A schema fetched from schema_url provided to this method
+        2. A schema fetched from the schema_url provided to this object
+
+        :param str schema_url: URL of a JSON schema
+        """
+
+        # if no schema_url given then use the default one
+        if schema_url is None:
+            schema_url = self.schema_url
+
+        # if no schema is given or present already then load from URL
+        self.schema = requests.get(schema_url).json()
+
+        if self.schema is None:
+            raise ValueError("No schema found")
+
+        # fetch the whole schema including references
+        self.schema = JsonRef.replace_refs(self.schema)
+
+        # create a validator
+        self.validator = Draft4Validator(
+            self.schema, format_checker=FormatChecker())
+
+        # recursively find property names and titles
+        def recurse_names(props, replace_names=OrderedDict(), prefix_k='', prefix_v=''):
+            for i, prop in props.items():
+                name_k = '{}.([0-9]+).{}'.format(prefix_k, i) if prefix_k != '' else i
+                name_v = '{}:\\1:{}'.format(prefix_v, prop.get(
+                    "title", i)) if prefix_v != '' else prop.get("title", i)
+                if prop.get("type") == 'array':
+                    replace_names = recurse_names(
+                        prop.get("items", {}).get("properties", {}),
+                        replace_names,
+                        name_k,
+                        name_v
+                    )
+                else:
+                    replace_names[name_k] = name_v
+            return replace_names
+
+        self.replace_names = recurse_names(
+            self.schema['properties'][self.root_id]['items']['properties'],
+            self.replace_names
+        )
+
+
 class ThreeSixtyGiving:
 
     root_id = 'grants'
@@ -30,17 +100,14 @@ class ThreeSixtyGiving:
 
     def __init__(self, data=None, schema_url=None, schema=None):
         self.schema = None
-        self.validator = None
-        self.replace_names = OrderedDict()
 
-        if schema_url:
+        if isinstance(schema, Schema):
+            self.schema = schema
+        elif schema_url:
             self.schema_url = schema_url
-            # @TODO: should this actually fetch the schema at this point?
-            # eg:
-            # if schema or schema_url:
-            #   self.fetch_schema(schema=schema, schema_url=schema_url)
-        if schema:
-            self.fetch_schema(schema=schema)
+            self.schema = Schema(schema_url, root_id=self.root_id)
+        else:
+            self.schema = Schema(self.schema_url, root_id=self.root_id)
 
         self.errors = []
         self.valid = None
@@ -123,9 +190,15 @@ class ThreeSixtyGiving:
         :return: Object of this class with data loaded
 
         Additional keyword arguments are passed to `cls.to_json()` which is used to parse the converted file
-
-        @TODO: better version of unflatten which allows for returning the data not a temporary file
         """
+
+        # get the schema if an URL is given
+        if isinstance(kwargs.get("schema"), Schema):
+            schema = kwargs.get("schema")
+        elif kwargs.get("schema_url"):
+            schema = Schema(kwargs.get("schema_url"), root_id=cls.root_id)
+        else:
+            schema = Schema(cls.schema_url, root_id=cls.root_id)
 
         # `flattentool.unflatten` is designed to accept a directory of CSV files
         # so need to create a dummy directory
@@ -143,25 +216,20 @@ class ThreeSixtyGiving:
             destfileobj, encoding = cls.guess_encoding(destination)
             destfileobj.close()
 
-        json_file, json_output = tempfile.mkstemp(suffix='.json')
-        os.close(json_file)
-        flattentool.unflatten(
+        data = unflatten(
             tmp_dir,
-            output_name=json_output,
             input_format="csv",
             root_list_path=cls.root_id,
             root_id='',
-            # @TODO: Need to better handle the schema here - there's duplication with the flattentool also fetching it
-            schema='https://raw.githubusercontent.com/ThreeSixtyGiving/standard/master/schema/360-giving-schema.json',
+            schema=schema.schema,
             convert_titles=True,
             encoding=encoding,
-            # I don't think this is used properly here
-            metatab_schema=cls.schema_url,
-            metatab_name='Meta',
-            metatab_vertical_orientation=True,
+            # @TODO: Need to check how to implement metatab schema
+            # metatab_schema=cls.schema_url,
+            # metatab_name='Meta',
+            # metatab_vertical_orientation=True,
         )
-        c = cls.from_json(json_output, **kwargs)
-        os.remove(json_output)
+        c = cls(data=data, schema=schema, **kwargs)
         return c
 
     @classmethod
@@ -176,24 +244,28 @@ class ThreeSixtyGiving:
 
         @TODO: better version of unflatten which allows for returning the data not a temporary file
         """
-        json_file, json_output = tempfile.mkstemp(suffix='.json')
-        os.close(json_file)
-        flattentool.unflatten(
+
+        # get the schema if an URL is given
+        if isinstance(kwargs.get("schema"), Schema):
+            schema = kwargs.get("schema")
+        elif kwargs.get("schema_url"):
+            schema = Schema(kwargs.get("schema_url"), root_id=cls.root_id)
+        else:
+            schema = Schema(cls.schema_url, root_id=cls.root_id)
+        
+        data = unflatten(
             f,
-            output_name=json_output,
             input_format="xlsx",
             root_list_path=cls.root_id,
             root_id='',
-            # @TODO: Need to better handle the schema here - there's duplication with the flattentool also fetching it
-            schema='https://raw.githubusercontent.com/ThreeSixtyGiving/standard/master/schema/360-giving-schema.json',
+            schema=schema.schema,
             convert_titles=True,
-            # I don't think this is used properly here
-            metatab_schema=cls.schema_url,
-            metatab_name='Meta',
-            metatab_vertical_orientation=True,
+            # @TODO: Need to check how to implement metatab schema
+            # metatab_schema=cls.schema_url,
+            # metatab_name='Meta',
+            # metatab_vertical_orientation=True,
         )
-        c = cls.from_json(json_output, **kwargs)
-        os.remove(json_output)
+        c = cls(data=data, schema=schema, **kwargs)
         return c
 
     from_xlsx = from_excel  # alias for to_excel
@@ -254,11 +326,6 @@ class ThreeSixtyGiving:
         """
         Fetch a schema based on the value in self.schema_url.
 
-        As well as fetching the initial schema file, the function will also:
-         - replace any references in the schema with the actual definitions (using JsonRed)
-         - use `jsonschema` to create a validator that can be used to check documents against the schema
-         - create a dictionary of field name conversions (as regex) that can be used to replace field names with more user friendly ones
-
         The order of preference for loading a schema is:
 
         1. A schema object given as a parameter to this method
@@ -267,8 +334,8 @@ class ThreeSixtyGiving:
         4. A schema fetched from the schema_url provided to this object
 
         :param str schema_url: URL of a JSON schema
-        :param dict schema: dictionary containing a JSON schema
-        :return: The full schema
+        :param Schema schema: Schema object containing a JSON schema
+        :return: The Schema objects
         """
 
         # if no schema_url given then use the default one
@@ -277,43 +344,14 @@ class ThreeSixtyGiving:
 
         # if no schema is given or present already then load from URL
         if self.schema is None and schema is None:
-            self.schema = requests.get(schema_url).json()
+            self.schema = Schema(schema_url, root_id=self.root_id)
 
         # else if a schema has been given then use that one
-        elif schema is not None:
+        elif isinstance(schema, Schema):
             self.schema = schema
 
-        if self.schema is None:
+        if not isinstance(self.schema, Schema):
             raise ValueError("No schema found")
-
-        # fetch the whole schema including references
-        self.schema = JsonRef.replace_refs(self.schema)
-
-        # create a validator
-        self.validator = Draft4Validator(
-            self.schema, format_checker=FormatChecker())
-
-        # recursively find property names and titles
-        def recurse_names(props, replace_names=OrderedDict(), prefix_k='', prefix_v=''):
-            for i, prop in props.items():
-                name_k = '{}.([0-9]+).{}'.format(prefix_k, i) if prefix_k != '' else i
-                name_v = '{}:\\1:{}'.format(prefix_v, prop.get(
-                    "title", i)) if prefix_v != '' else prop.get("title", i)
-                if prop.get("type") == 'array':
-                    replace_names = recurse_names(
-                        prop.get("items", {}).get("properties", {}),
-                        replace_names,
-                        name_k,
-                        name_v
-                    )
-                else:
-                    replace_names[name_k] = name_v
-            return replace_names
-
-        self.replace_names = recurse_names(
-            self.schema['properties'][self.root_id]['items']['properties'],
-            self.replace_names
-        )
 
         return self.schema
 
@@ -327,13 +365,13 @@ class ThreeSixtyGiving:
         :return: Iterator of any errors found in the data
         """
         # if no schema given then we can't error check
-        if self.schema is None or self.validator is None:
+        if not isinstance(self.schema, Schema):
             raise ValueError("No schema available to check")
 
         if data is None:
             data = self.data
 
-        for e in self.validator.iter_errors(data):
+        for e in self.schema.validator.iter_errors(data):
             # ignore error where the datetime value is one of a type
             if e.validator == 'oneOf' and e.validator_value[0] == {'format': 'date-time'}:
                 continue
@@ -465,13 +503,13 @@ class ThreeSixtyGiving:
 
     def convert_fieldnames(self, fieldnames):
         """
-        Applies the transformations in `self.replace_names` to a set of fieldnames
+        Applies the transformations in `self.schema.replace_names` to a set of fieldnames
 
         :param list[str] fieldnames: A list of fieldnames to replace
         :return: Dictionary of old:new values for fieldnames
         """
         fieldnames = OrderedDict(zip(fieldnames, fieldnames))
-        for old, new in self.replace_names.items():
+        for old, new in self.schema.replace_names.items():
             for field in fieldnames:
                 if re.fullmatch(old, field):
                     fieldnames[field] = re.sub(old, new, field)

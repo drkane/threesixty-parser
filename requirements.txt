@@ -22,5 +22,5 @@ requests==2.21.0
 requests-mock==1.5.2
 schema==0.6.8
 six==1.11.0
-urllib3==1.24.2
+urllib3==1.26.5
 xmltodict==0.11.0

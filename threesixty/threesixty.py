@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 import flattentool
 import requests
+from urllib.parse import urlparse
 from jsonref import JsonRef
 from jsonschema import Draft4Validator, FormatChecker
 
@@ -78,7 +79,7 @@ class ThreeSixtyGiving:
                 if filetype:
                     filetype = filetype[0].split('.')[-1].strip('"')
             else:
-                filetype = url.split('.')[-1]
+                filetype = urlparse(url).path.split('.')[-1]
             if filetype not in CONTENT_TYPE_MAP.values():
                 raise ValueError("Unrecognised file type [{}]".format(filetype))
 

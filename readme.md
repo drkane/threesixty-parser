@@ -302,6 +302,8 @@ isn't part of `requirements.txt` so will need to be installed separately.
 
 ## Running tests
 
+Sample data for running the tests is in a git submodule. Make sure to initialise and update it before running tests.
+
 The test suite can be run through [pytest](https://docs.pytest.org/en/latest/):
 
 ```bash

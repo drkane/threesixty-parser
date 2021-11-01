@@ -2,6 +2,7 @@ atomicwrites==1.2.1
 attrs==18.2.0
 certifi==2018.10.15
 chardet==3.0.4
+charset-normalizer==2.0.7
 colorama==0.4.0
 et-xmlfile==1.0.1
 flattentool==0.5.0
@@ -18,9 +19,9 @@ py==1.7.0
 pytest==3.8.2
 python-dateutil==2.7.3
 pytz==2018.5
-requests==2.21.0
+requests==2.26.0
 requests-mock==1.5.2
 schema==0.6.8
 six==1.11.0
-urllib3==1.24.2
+urllib3==1.26.7
 xmltodict==0.11.0
